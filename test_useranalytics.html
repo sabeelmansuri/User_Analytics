@@ -1,0 +1,172 @@
+<!DOCTYPE HTML>
+<title>Bravado Analytics</title>
+<html>
+	<head>
+		<!--Link in needed files/scripts-->
+		<link rel='stylesheet' type='text/css' href='style.css'/>
+		<script type='text/javascript' src='script.js'></script>
+		<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+		<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+		<script src="chart.js/dist/chart.js"></script>
+
+		<!--Datepicker Script-->
+		<script>
+		$( function() {
+
+			// Select dates
+			$("#startdate").datepicker({ dateFormat: 'mm-dd-yy', maxDate: '0' });
+			$("#enddate").datepicker({ dateFormat: 'mm-dd-yy', maxDate: '0' });
+
+			// Validate and confirm dates
+			$("#confirm").click(function() {
+				var startdate = $("#startdate").val();
+				var enddate = $("#enddate").val();
+				if (startdate == "" || startdate == "Click Here") {
+					alert("Please enter valid start date.");
+				} else if (enddate == "" || enddate == "Click Here") {
+					alert("Please enter valid end date.");
+				} else if (startdate > enddate) {
+					alert("Start date cannot be after end date.");
+				} else {
+					var ret = confirm("Would you like analytics data from " + startdate + " to " + enddate + "?");
+				}
+
+				// If user confirms dates
+				if(ret == true) {
+					// Build date formats
+					var smonth = startdate.substring(0, startdate.indexOf("-"));
+					var sday = startdate.substring(startdate.indexOf("-") + 1, startdate.lastIndexOf("-"));
+					if(sday.charAt(0) == "0") {
+						sday = sday.charAt(1);
+					}
+					var syear = startdate.substring(startdate.length - 2, startdate.length);
+
+					var emonth = enddate.substring(0, enddate.indexOf("-"));
+					var eday = enddate.substring(enddate.indexOf("-") + 1, enddate.lastIndexOf("-"));
+					if(eday.charAt(0) == "0") {
+						eday = eday.charAt(1);
+					}
+					var eyear = enddate.substring(enddate.length - 2, enddate.length);
+
+					// Build url
+					var myurl = "bravado.co/funnel?from=" + sday + "-" + smonth + "-" + syear + "&to=" + eday + "-" + emonth + "-" + eyear;
+					getData(myurl);
+				}
+			});
+
+		});
+		</script>
+
+		<!--Data Pulling Script-->
+		<script>
+		/* Get json file from url */
+		function getData(myurl) {
+			var file = "";
+			myurl="https://api.myjson.com/bins/1bwaje";
+			$.ajax( {
+				type: 'GET',
+				url: myurl,
+				data: {get_param: 'value'},
+				dataType: 'json',
+				success: function(data) {
+					jExtract(data);
+				},
+				error: function(data) {
+					alert("Data for these dates was not found.")
+				}
+			});
+		}
+		</script>
+
+
+		<!--JSON Extraction Script-->
+		<script>
+		/* Extract numerical values from json in order into list */
+		function jExtract(jfile) {
+			var data = [];
+			data.push(jfile.new_users);
+			data.push(jfile.with_zero_progress);
+			data.push(jfile.added_at_least_1_client);
+			data.push(jfile.added_at_least_2_clients);
+			data.push(jfile.created_email_signature);
+			data.push(jfile.requested_testimonial);
+			data.push(jfile.completed_testimonial);
+			data.push(jfile.became_power_users);
+			chartData(data);
+		}
+		</script>
+
+
+		<!--Charting Script-->
+		<script>
+		/* Create chart of data */
+		function chartData(numData) {
+			var ctx = document.getElementById('myChart').getContext('2d');
+			var chart = new Chart(ctx, {
+				type: 'bar',
+
+				data: {
+					labels: [
+						"New Users",
+						"Dropoffs",
+						"Added 1+ Client",
+						"Added 2+ Clients",
+						"Created Email Signature",
+						"Requested Testimonial",
+						"Completed Testimonial",
+						"Became Power Users"
+					],
+					datasets: [{
+						label: "",
+						backgroundColor: [
+							'rgba(0, 80, 255, 0.4)',
+							'rgba(255, 0, 0, 0.8)',
+							'rgba(0, 242, 255, 0.4)',
+							'rgba(59, 214, 93, 0.4)',
+							'rgba(255, 206, 86, 0.4)',
+							'rgba(255, 159, 64, 0.4)',
+							'rgba(244, 65, 160, 0.4)',
+							'rgba(208, 65, 244, 0.4)'
+
+						],
+						borderColor: [
+							'rgba(0, 80, 255, 1)',
+							'rgba(255, 0, 0, 1)',
+							'rgba(0, 242, 255, 1)',
+							'rgba(59, 214, 93, 1)',
+							'rgba(255, 206, 86, 1)',
+							'rgba(255, 159, 64, 1)',
+							'rgba(244, 65, 160, 1)',
+							'rgba(208, 65, 244, 1)'
+						],
+						data: numData,
+					}]
+				},
+
+				options: {
+					legend: {
+						display: false,
+					}
+				}
+			});
+		}
+		</script>
+	</head>
+
+	<body>
+		<h1>Bravado User Analytics</h1>
+
+		<!--Date Selector-->
+		<p>Start Date:&nbsp;<input type='text' id='startdate' onfocus="this.value=''" value="Click Here"></p>
+		<p>End Date:&ensp;<input type='text' id='enddate' onfocus="this.value=''" value="Click Here"></p>
+
+		<!--Confirm Button-->
+		<button id='confirm'>Confirm Dates</button>
+
+		<!--Chart Canvas-->
+		<br><br>
+		<canvas id="myChart"></canvas>
+
+	</body>
+</html>
